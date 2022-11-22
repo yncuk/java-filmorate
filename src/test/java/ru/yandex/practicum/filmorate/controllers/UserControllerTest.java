@@ -23,9 +23,13 @@ class UserControllerTest {
     @ValueSource(strings = {" ", "  ", "nick name", "mail ru"})
     @DisplayName("Check create user with empty login or login with space")
     void createUserWithEmptyOrWithSpaceLogin(String name) {
-        User user = new User();
-        user.setEmail("name@mail.ru");
-        user.setLogin(name);
+        // given (BeforeEach)
+        // when
+        User user = User.builder()
+                .email("name@mail.ru")
+                .login(name)
+                .build();
+        // then
         ValidationException thrown = assertThrows(ValidationException.class,
                 () -> userController.create(user));
         assertTrue(thrown.getMessage().contains("Логин не может быть пустым и содержать пробелы"));
@@ -34,21 +38,29 @@ class UserControllerTest {
     @Test
     @DisplayName("Check create user with empty name")
     void createUserWithEmptyName() throws ValidationException {
-        User user = new User();
-        user.setEmail("name@mail.ru");
-        user.setLogin("name");
-        user.setBirthday(LocalDate.of(2000, 12, 20));
+        // given (BeforeEach)
+        // when
+        User user = User.builder()
+                .email("name@mail.ru")
+                .login("name")
+                .birthday(LocalDate.of(2000, 12, 20))
+                .build();
         User user1 = userController.create(user);
+        // then
         assertEquals("name", user1.getName());
     }
 
     @Test
     @DisplayName("Check create user with birthday in the future")
     void createUserWithBirthdayInTheFuture() {
-        User user = new User();
-        user.setEmail("name@mail.ru");
-        user.setLogin("name");
-        user.setBirthday(LocalDate.of(2030, 12, 20));
+        // given (BeforeEach)
+        // when
+        User user = User.builder()
+                .email("name@mail.ru")
+                .login("name")
+                .birthday(LocalDate.of(2030, 12, 20))
+                        .build();
+        // then
         ValidationException thrown = assertThrows(ValidationException.class,
                 () -> userController.create(user));
         assertTrue(thrown.getMessage().contains("Дата рождения не может быть в будущем"));
@@ -57,11 +69,15 @@ class UserControllerTest {
     @Test
     @DisplayName("Check create user without mistakes")
     void createUserWithoutMistakes() throws ValidationException {
-        User user = new User();
-        user.setEmail("name@mail.ru");
-        user.setLogin("name");
-        user.setBirthday(LocalDate.of(2000, 12, 20));
+        // given (BeforeEach)
+        // when
+        User user = User.builder()
+                .email("name@mail.ru")
+                .login("name")
+                .birthday(LocalDate.of(2000, 12, 20))
+                .build();
         User user1 = userController.create(user);
+        // then
         assertAll(
                 () -> assertEquals(user1.getId(), 1),
                 () -> assertEquals(user1.getEmail(), "name@mail.ru"),
@@ -70,5 +86,4 @@ class UserControllerTest {
                 () -> assertEquals(user1.getName(), "name")
         );
     }
-
 }

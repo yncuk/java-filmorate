@@ -24,21 +24,16 @@ public class UserController {
     }
 
     @PostMapping
-    public User create(@Valid @RequestBody final User user) throws ValidationException {
-        if (user.getLogin().contains(" ")) {
-            log.info("Логин: '{}' пустой или содержит пробелы", user.getLogin());
-            throw new ValidationException("Логин не может быть пустым и содержать пробелы");
-        } else if (user.getBirthday().isAfter(LocalDate.now())) {
-            log.info("Дата рождения {} не может быть в будущем", user.getBirthday());
-            throw new ValidationException("Дата рождения не может быть в будущем");
-        } else if (user.getName() == null) {
+    public User create(@Valid @RequestBody User user) throws ValidationException {
+        validating(user);
+        if (user.getName() == null) {
             log.info("Меняем пустое имя {} на логин {}", user.getName(), user.getLogin());
-            user.setName(user.getLogin());
+            user = user.toBuilder().name(user.getLogin()).build();
         } else if (user.getName().isBlank()) {
             log.info("Меняем пустое имя {} на логин {}", user.getName(), user.getLogin());
-            user.setName(user.getLogin());
+            user = user.toBuilder().name(user.getLogin()).build();
         }
-        user.setId(id);
+        user = user.toBuilder().id(id).build();
         id++;
         users.put(user.getId(), user);
         log.info("Пользователь с логином {} добавлен", user.getLogin());
@@ -46,14 +41,9 @@ public class UserController {
     }
 
     @PutMapping
-    public User update(@Valid @RequestBody final User user) throws ValidationException {
-        if (user.getLogin().contains(" ")) {
-            log.info("Логин: '{}' пустой или содержит пробелы", user.getLogin());
-            throw new ValidationException("Логин не может быть пустым и содержать пробелы");
-        } else if (user.getBirthday().isAfter(LocalDate.now())) {
-            log.info("Дата рождения {} не может быть в будущем", user.getBirthday());
-            throw new ValidationException("Дата рождения не может быть в будущем");
-        } else if (users.containsKey(user.getId())) {
+    public User update(@Valid @RequestBody User user) throws ValidationException {
+        validating(user);
+        if (users.containsKey(user.getId())) {
             users.put(user.getId(), user);
             log.info("Пользователь с логином {} обновлен", user.getLogin());
         } else {
@@ -63,4 +53,13 @@ public class UserController {
         return user;
     }
 
+    private void validating(User user) throws ValidationException {
+        if (user.getLogin().contains(" ")) {
+            log.info("Логин: '{}' пустой или содержит пробелы", user.getLogin());
+            throw new ValidationException("Логин не может быть пустым и содержать пробелы");
+        } else if (user.getBirthday().isAfter(LocalDate.now())) {
+            log.info("Дата рождения {} не может быть в будущем", user.getBirthday());
+            throw new ValidationException("Дата рождения не может быть в будущем");
+        }
+    }
 }

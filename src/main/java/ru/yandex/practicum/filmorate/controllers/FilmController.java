@@ -27,18 +27,9 @@ public class FilmController {
     }
 
     @PostMapping
-    public Film create(@Valid @RequestBody final Film film) throws ValidationException {
-        if (film.getDescription().length() > 200) {
-            log.info("Длина описания {} > 200", film.getDescription().length());
-            throw new ValidationException("Максимальная длина описания — 200 символов");
-        } else if (film.getReleaseDate().isBefore(movieBirthday)) {
-            log.info("Дата релиза раньше {} и равна - {}", movieBirthday, film.getReleaseDate());
-            throw new ValidationException("Дата релиза не может быть раньше дня рождения кино");
-        } else if (film.getDuration().isNegative()) {
-            log.info("Продолжительность фильма {} < 0", film.getDuration());
-            throw new ValidationException("Продолжительность фильма должна быть положительной");
-        }
-        film.setId(id);
+    public Film create(@Valid @RequestBody Film film) throws ValidationException {
+        validating(film);
+        film = film.toBuilder().id(id).build();
         id++;
         films.put(film.getId(), film);
         log.info("Фильм добавлен - {}", film.getName());
@@ -46,7 +37,19 @@ public class FilmController {
     }
 
     @PutMapping
-    public Film update(@Valid @RequestBody final Film film) throws ValidationException {
+    public Film update(@Valid @RequestBody Film film) throws ValidationException {
+        validating(film);
+        if (films.containsKey(film.getId())) {
+            films.put(film.getId(), film);
+            log.info("Фильм {} обновлен", film.getName());
+        } else {
+            log.info("Такого фильма нет: {}", film);
+            throw new ValidationException("Такого фильма нет");
+        }
+        return film;
+    }
+
+    private void validating(Film film) throws ValidationException {
         if (film.getDescription().length() > 200) {
             log.info("Длина описания {} > 200", film.getDescription().length());
             throw new ValidationException("Максимальная длина описания — 200 символов");
@@ -56,13 +59,6 @@ public class FilmController {
         } else if (film.getDuration().isNegative()) {
             log.info("Продолжительность фильма {} < 0", film.getDuration());
             throw new ValidationException("Продолжительность фильма должна быть положительной");
-        } else if (films.containsKey(film.getId())) {
-            films.put(film.getId(), film);
-            log.info("Фильм {} обновлен", film.getName());
-        } else {
-            log.info("Такого фильма нет: {}", film);
-            throw new ValidationException("Такого фильма нет");
         }
-        return film;
     }
 }
