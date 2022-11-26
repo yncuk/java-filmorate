@@ -29,7 +29,7 @@ public class FilmController {
     @PostMapping
     public Film create(@Valid @RequestBody Film film) throws ValidationException {
         validating(film);
-        film = film.toBuilder().id(id).build();
+        film.setId(id);
         id++;
         films.put(film.getId(), film);
         log.info("Фильм добавлен - {}", film.getName());

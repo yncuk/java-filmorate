@@ -28,12 +28,12 @@ public class UserController {
         validating(user);
         if (user.getName() == null) {
             log.info("Меняем пустое имя {} на логин {}", user.getName(), user.getLogin());
-            user = user.toBuilder().name(user.getLogin()).build();
+            user.setName(user.getLogin());
         } else if (user.getName().isBlank()) {
             log.info("Меняем пустое имя {} на логин {}", user.getName(), user.getLogin());
-            user = user.toBuilder().name(user.getLogin()).build();
+            user.setName(user.getLogin());
         }
-        user = user.toBuilder().id(id).build();
+        user.setId(id);
         id++;
         users.put(user.getId(), user);
         log.info("Пользователь с логином {} добавлен", user.getLogin());
