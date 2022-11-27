@@ -1,58 +1,49 @@
 package ru.yandex.practicum.filmorate.model;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonFormat;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import com.fasterxml.jackson.datatype.jsr310.deser.LocalDateDeserializer;
+import com.fasterxml.jackson.datatype.jsr310.ser.LocalDateSerializer;
+import lombok.Builder;
+import lombok.Value;
+import lombok.With;
+
 import javax.validation.constraints.Email;
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
 import java.time.LocalDate;
 
+@Value
+@Builder(toBuilder = true)
 public class User {
+    @With
     int id;
     @NotNull @Email
     String email;
     @NotNull @NotBlank
     String login;
-
+    @With
     String name;
     @NotNull
     LocalDate birthday;
 
-    public int getId() {
-        return id;
-    }
-
-    public void setId(int id) {
+    @JsonCreator
+    public User(
+            @JsonProperty("id") int id,
+            @JsonProperty("email") String email,
+            @JsonProperty("login") String login,
+            @JsonProperty("name") String name,
+            @JsonFormat(pattern = "yyyy-MM-dd")
+            @JsonSerialize(using = LocalDateSerializer.class)
+            @JsonDeserialize(using = LocalDateDeserializer.class)
+            @JsonProperty("birthday") LocalDate birthday) {
         this.id = id;
-    }
-
-    public String getEmail() {
-        return email;
-    }
-
-    public void setEmail(String email) {
         this.email = email;
-    }
-
-    public String getLogin() {
-        return login;
-    }
-
-    public void setLogin(String login) {
         this.login = login;
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    public void setName(String name) {
         this.name = name;
-    }
-
-    public LocalDate getBirthday() {
-        return birthday;
-    }
-
-    public void setBirthday(LocalDate birthday) {
         this.birthday = birthday;
     }
 }

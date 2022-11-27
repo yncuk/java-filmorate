@@ -1,13 +1,25 @@
 package ru.yandex.practicum.filmorate.model;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonFormat;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import com.fasterxml.jackson.datatype.jsr310.deser.LocalDateDeserializer;
+import com.fasterxml.jackson.datatype.jsr310.ser.LocalDateSerializer;
+import lombok.Builder;
+import lombok.Value;
+import lombok.With;
+
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
 import java.time.Duration;
 import java.time.LocalDate;
 
-
-public class Film { // пришлось уйти от аннотаций Value и Builder, а то никак не получалось тесты настроить
-
+@Value
+@Builder(toBuilder = true)
+public class Film {
+    @With
     int id;
     @NotNull @NotBlank String name;
     @NotNull
@@ -17,43 +29,20 @@ public class Film { // пришлось уйти от аннотаций Value �
     @NotNull
     Duration duration;
 
-    public int getId() {
-        return id;
-    }
-
-    public void setId(int id) {
+    @JsonCreator
+    public Film(
+            @JsonProperty("id") int id,
+            @JsonProperty("name") String name,
+            @JsonProperty("description") String description,
+            @JsonFormat(pattern = "yyyy-MM-dd")
+            @JsonSerialize(using = LocalDateSerializer.class)
+            @JsonDeserialize(using = LocalDateDeserializer.class)
+            @JsonProperty("releaseDate") LocalDate releaseDate,
+            @JsonProperty("duration") Duration duration) {
         this.id = id;
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    public void setName(String name) {
         this.name = name;
-    }
-
-    public String getDescription() {
-        return description;
-    }
-
-    public void setDescription(String description) {
         this.description = description;
-    }
-
-    public LocalDate getReleaseDate() {
-        return releaseDate;
-    }
-
-    public void setReleaseDate(LocalDate releaseDate) {
         this.releaseDate = releaseDate;
-    }
-
-    public Duration getDuration() {
-        return duration;
-    }
-
-    public void setDuration(Duration duration) {
         this.duration = duration;
     }
 }

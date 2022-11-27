@@ -9,7 +9,6 @@ import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMock
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import ru.yandex.practicum.filmorate.exceptions.ValidationException;
 import ru.yandex.practicum.filmorate.model.Film;
 
@@ -27,14 +26,8 @@ class FilmControllerTest {
     @Autowired
     private MockMvc mockMvc;
 
+    @Autowired
     FilmController filmController;
-
-    @BeforeEach
-    void setUp() {
-        filmController = new FilmController();
-        mockMvc = MockMvcBuilders.standaloneSetup(filmController)
-                .build();
-    }
 
     @ParameterizedTest(name = "{index}. Check create film with empty name: \"{arguments}\"")
     @ValueSource(strings = {" ", "  ", "   ", "    "})
@@ -42,12 +35,12 @@ class FilmControllerTest {
     void createFilmWithEmptyName(String name) throws Exception {
         // given (BeforeEach)
         // when
-        Film film = new Film();
-        film.setId(1);
-        film.setName(name);
-        film.setDescription("test");
-        film.setReleaseDate(LocalDate.of(2000, 10, 12));
-        film.setDuration(Duration.ofMinutes(100));
+        Film film = Film.builder()
+                .name(name)
+                .description("test")
+                .releaseDate(LocalDate.of(2000, 10, 12))
+                .duration(Duration.ofMinutes(100))
+                .build();
         // then
         mockMvc.perform(
                         post("/films")
@@ -62,10 +55,10 @@ class FilmControllerTest {
     void createFilmWithDescriptionMoreThen200() {
         // given (BeforeEach)
         // when
-        Film film = new Film();
-        film.setId(1);
-        film.setName("name");
-        film.setDescription(StringUtils.repeat("test ", 41));
+        Film film = Film.builder()
+                .name("name")
+                .description(StringUtils.repeat("test ", 41))
+                .build();
         // then
         ValidationException thrown = assertThrows(ValidationException.class,
                 () -> filmController.create(film));
@@ -77,11 +70,11 @@ class FilmControllerTest {
     void createFilmWithReleaseDateBeforeMovieBirthday() {
         // given (BeforeEach)
         // when
-        Film film = new Film();
-        film.setId(1);
-        film.setName("name");
-        film.setDescription("test");
-        film.setReleaseDate(LocalDate.of(1800, 10, 12));
+        Film film = Film.builder()
+                .name("name")
+                .description("test")
+                .releaseDate(LocalDate.of(1800, 10, 12))
+                .build();
         // then
         ValidationException thrown = assertThrows(ValidationException.class,
                 () -> filmController.create(film));
@@ -93,12 +86,12 @@ class FilmControllerTest {
     void createFilmWithNegativeDuration() {
         // given (BeforeEach)
         // when
-        Film film = new Film();
-        film.setId(1);
-        film.setName("name");
-        film.setDescription("test");
-        film.setReleaseDate(LocalDate.of(2000, 10, 12));
-        film.setDuration(Duration.ofMinutes(-100));
+        Film film = Film.builder()
+                .name("name")
+                .description("test")
+                .releaseDate(LocalDate.of(2000, 10, 12))
+                .duration(Duration.ofMinutes(-100))
+                .build();
         // then
         ValidationException thrown = assertThrows(ValidationException.class,
                 () -> filmController.create(film));
@@ -110,17 +103,18 @@ class FilmControllerTest {
     void createFilmWithoutMistakes() throws ValidationException {
         // given (BeforeEach)
         // when
-        Film film = new Film();
-        film.setName("nisi eiusmod");
-        film.setDescription("test");
-        film.setReleaseDate(LocalDate.of(1967, 3, 25));
-        film.setDuration(Duration.ofMinutes(100));
+        Film film = Film.builder()
+                .name("nisi eiusmod")
+                .description("adipisicing")
+                .releaseDate(LocalDate.of(1967, 3, 25))
+                .duration(Duration.ofMinutes(100))
+                .build();
         Film film1 = filmController.create(film);
         // then
         assertAll(
                 () -> assertEquals(film1.getId(), 1),
                 () -> assertEquals(film1.getName(), "nisi eiusmod"),
-                () -> assertEquals(film1.getDescription(), "test"),
+                () -> assertEquals(film1.getDescription(), "adipisicing"),
                 () -> assertEquals(film1.getReleaseDate(), LocalDate.of(1967, 3, 25)),
                 () -> assertEquals(film1.getDuration(), Duration.ofMinutes(100))
         );

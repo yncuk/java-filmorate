@@ -8,7 +8,6 @@ import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMock
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import ru.yandex.practicum.filmorate.exceptions.ValidationException;
 import ru.yandex.practicum.filmorate.model.User;
 
@@ -25,23 +24,19 @@ class UserControllerTest {
 
     @Autowired
     private MockMvc mockMvc;
-    UserController userController;
 
-    @BeforeEach
-    void setUp() {
-        userController = new UserController();
-        mockMvc = MockMvcBuilders.standaloneSetup(userController)
-                .build();
-    }
+    @Autowired
+    UserController userController;
 
     @ParameterizedTest(name = "{index}. Check create user with wrong email: \"{arguments}\"")
     @ValueSource(strings = {" ", "  ", "nickname@", "mail ru"})
     @DisplayName("Check create user with wrong email")
     void createUserWithWrongEmail(String mail) throws Exception {
-        User user = new User();
-        user.setLogin("name");
-        user.setEmail(mail);
-        user.setBirthday(LocalDate.of(2000, 12, 20));
+        User user = User.builder()
+                .login("name")
+                .email(mail)
+                .birthday(LocalDate.of(2000, 12, 20))
+                .build();
         mockMvc.perform(
                         post("/users")
                                 .content(getMapper().writeValueAsString(user))
@@ -56,9 +51,10 @@ class UserControllerTest {
     void createUserWithEmptyLoginOrWithSpaceLogin(String name) {
         // given (BeforeEach)
         // when
-        User user = new User();
-        user.setLogin(name);
-        user.setEmail("name@mail.ru");
+        User user = User.builder()
+                .email("name@mail.ru")
+                .login(name)
+                .build();
         // then
         ValidationException thrown = assertThrows(ValidationException.class,
                 () -> userController.create(user));
@@ -70,10 +66,11 @@ class UserControllerTest {
     void createUserWithEmptyName() throws ValidationException {
         // given (BeforeEach)
         // when
-        User user = new User();
-        user.setLogin("name");
-        user.setEmail("name@mail.ru");
-        user.setBirthday(LocalDate.of(2000, 12, 20));
+        User user = User.builder()
+                .email("name@mail.ru")
+                .login("name")
+                .birthday(LocalDate.of(2000, 12, 20))
+                .build();
         User user1 = userController.create(user);
         // then
         assertEquals("name", user1.getName());
@@ -84,10 +81,11 @@ class UserControllerTest {
     void createUserWithBirthdayInTheFuture() {
         // given (BeforeEach)
         // when
-        User user = new User();
-        user.setLogin("name");
-        user.setEmail("name@mail.ru");
-        user.setBirthday(LocalDate.of(2030, 12, 20));
+        User user = User.builder()
+                .email("name@mail.ru")
+                .login("name")
+                .birthday(LocalDate.of(2030, 12, 20))
+                .build();
         // then
         ValidationException thrown = assertThrows(ValidationException.class,
                 () -> userController.create(user));
@@ -99,10 +97,11 @@ class UserControllerTest {
     void createUserWithoutMistakes() throws ValidationException {
         // given (BeforeEach)
         // when
-        User user = new User();
-        user.setLogin("name");
-        user.setEmail("name@mail.ru");
-        user.setBirthday(LocalDate.of(2000, 12, 20));
+        User user = User.builder()
+                .email("name@mail.ru")
+                .login("name")
+                .birthday(LocalDate.of(2000, 12, 20))
+                .build();
         User user1 = userController.create(user);
         // then
         assertAll(

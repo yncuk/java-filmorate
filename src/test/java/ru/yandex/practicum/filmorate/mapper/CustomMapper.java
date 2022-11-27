@@ -6,7 +6,7 @@ import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 
 public class CustomMapper {
-    public static ObjectMapper getMapper() { // Это наставник подсказал
+    public static ObjectMapper getMapper() {
         ObjectMapper objectMapper = new ObjectMapper();
         objectMapper.enable(SerializationFeature.INDENT_OUTPUT);
         objectMapper.setSerializationInclusion(JsonInclude.Include.NON_NULL);
