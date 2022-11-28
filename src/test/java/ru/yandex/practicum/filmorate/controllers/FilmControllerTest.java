@@ -12,7 +12,6 @@ import org.springframework.test.web.servlet.MockMvc;
 import ru.yandex.practicum.filmorate.exceptions.ValidationException;
 import ru.yandex.practicum.filmorate.model.Film;
 
-import java.time.Duration;
 import java.time.LocalDate;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -39,7 +38,7 @@ class FilmControllerTest {
                 .name(name)
                 .description("test")
                 .releaseDate(LocalDate.of(2000, 10, 12))
-                .duration(Duration.ofMinutes(100))
+                .duration(100)
                 .build();
         // then
         mockMvc.perform(
@@ -90,7 +89,7 @@ class FilmControllerTest {
                 .name("name")
                 .description("test")
                 .releaseDate(LocalDate.of(2000, 10, 12))
-                .duration(Duration.ofMinutes(-100))
+                .duration(-100)
                 .build();
         // then
         ValidationException thrown = assertThrows(ValidationException.class,
@@ -107,7 +106,7 @@ class FilmControllerTest {
                 .name("nisi eiusmod")
                 .description("adipisicing")
                 .releaseDate(LocalDate.of(1967, 3, 25))
-                .duration(Duration.ofMinutes(100))
+                .duration(100)
                 .build();
         Film film1 = filmController.create(film);
         // then
@@ -116,7 +115,7 @@ class FilmControllerTest {
                 () -> assertEquals(film1.getName(), "nisi eiusmod"),
                 () -> assertEquals(film1.getDescription(), "adipisicing"),
                 () -> assertEquals(film1.getReleaseDate(), LocalDate.of(1967, 3, 25)),
-                () -> assertEquals(film1.getDuration(), Duration.ofMinutes(100))
+                () -> assertEquals(film1.getDuration(), 100)
         );
     }
 }

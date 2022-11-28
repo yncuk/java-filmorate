@@ -13,7 +13,6 @@ import lombok.With;
 
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
-import java.time.Duration;
 import java.time.LocalDate;
 
 @Value
@@ -27,7 +26,7 @@ public class Film {
     @NotNull
     LocalDate releaseDate;
     @NotNull
-    Duration duration;
+    Integer duration;
 
     @JsonCreator
     public Film(
@@ -38,7 +37,7 @@ public class Film {
             @JsonSerialize(using = LocalDateSerializer.class)
             @JsonDeserialize(using = LocalDateDeserializer.class)
             @JsonProperty("releaseDate") LocalDate releaseDate,
-            @JsonProperty("duration") Duration duration) {
+            @JsonProperty("duration") Integer duration) {
         this.id = id;
         this.name = name;
         this.description = description;
