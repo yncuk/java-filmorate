@@ -1,6 +1,6 @@
 package ru.yandex.practicum.filmorate.controllers;
 
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 import ru.yandex.practicum.filmorate.exceptions.NotFoundException;
 import ru.yandex.practicum.filmorate.exceptions.ValidationException;
@@ -14,16 +14,11 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/films")
+@RequiredArgsConstructor
 public class FilmController {
 
-    FilmStorage filmStorage;
-    FilmService filmService;
-
-    @Autowired
-    public FilmController(FilmStorage filmStorage, FilmService filmService) {
-        this.filmStorage = filmStorage;
-        this.filmService = filmService;
-    }
+    private final FilmStorage filmStorage;
+    private final FilmService filmService;
 
     @GetMapping
     public Collection<Film> findAll() {
@@ -42,23 +37,23 @@ public class FilmController {
 
     @PostMapping
     public Film create(@Valid @RequestBody Film film) throws ValidationException {
-        return filmStorage.create(film);
+        return filmService.create(film);
     }
 
     @PutMapping
-    public Film update(@Valid @RequestBody Film film) throws ValidationException, NotFoundException {
-        return filmStorage.update(film);
+    public Film update(@Valid @RequestBody Film film) {
+        return filmService.update(film);
     }
 
     @PutMapping("/{id}/like/{userId}")
     public void putLike(@PathVariable Integer id,
-                        @PathVariable Integer userId) throws NotFoundException, ValidationException {
+                        @PathVariable Integer userId) {
         filmService.putLike(id, userId);
     }
 
     @DeleteMapping("/{id}/like/{userId}")
     public void deleteLike(@PathVariable Integer id,
-                           @PathVariable Integer userId) throws NotFoundException, ValidationException {
+                           @PathVariable Integer userId) {
         filmService.deleteLike(id, userId);
     }
 }

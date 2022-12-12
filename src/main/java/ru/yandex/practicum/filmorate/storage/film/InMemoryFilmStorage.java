@@ -6,7 +6,6 @@ import ru.yandex.practicum.filmorate.exceptions.NotFoundException;
 import ru.yandex.practicum.filmorate.exceptions.ValidationException;
 import ru.yandex.practicum.filmorate.model.Film;
 
-import java.time.LocalDate;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
@@ -15,7 +14,6 @@ import java.util.Map;
 @Component
 public class InMemoryFilmStorage implements FilmStorage {
 
-    private final LocalDate movieBirthday = LocalDate.of(1895, 12, 28);
     Map<Integer, Film> films = new HashMap<>();
     private int id = 1;
 
@@ -35,7 +33,6 @@ public class InMemoryFilmStorage implements FilmStorage {
 
     @Override
     public Film create(Film film) throws ValidationException {
-        validating(film);
         film = film.withId(id);
         id++;
         films.put(film.getId(), film);
@@ -44,8 +41,7 @@ public class InMemoryFilmStorage implements FilmStorage {
     }
 
     @Override
-    public Film update(Film film) throws ValidationException, NotFoundException {
-        validating(film);
+    public Film update(Film film) throws NotFoundException {
         if (films.containsKey(film.getId())) {
             films.put(film.getId(), film);
             log.info("Фильм {} обновлен", film.getName());
@@ -54,18 +50,5 @@ public class InMemoryFilmStorage implements FilmStorage {
             throw new NotFoundException("Такого фильма нет");
         }
         return film;
-    }
-
-    private void validating(Film film) throws ValidationException {
-        if (film.getDescription().length() > 200) {
-            log.info("Длина описания {} > 200", film.getDescription().length());
-            throw new ValidationException("Максимальная длина описания — 200 символов");
-        } else if (film.getReleaseDate().isBefore(movieBirthday)) {
-            log.info("Дата релиза раньше {} и равна - {}", movieBirthday, film.getReleaseDate());
-            throw new ValidationException("Дата релиза не может быть раньше дня рождения кино");
-        } else if (film.getDuration() < 0) {
-            log.info("Продолжительность фильма {} < 0", film.getDuration());
-            throw new ValidationException("Продолжительность фильма должна быть положительной");
-        }
     }
 }

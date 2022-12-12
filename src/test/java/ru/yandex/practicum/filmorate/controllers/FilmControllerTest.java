@@ -11,6 +11,7 @@ import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import ru.yandex.practicum.filmorate.exceptions.ValidationException;
 import ru.yandex.practicum.filmorate.model.Film;
+import ru.yandex.practicum.filmorate.service.FilmService;
 
 import java.time.LocalDate;
 
@@ -27,6 +28,8 @@ class FilmControllerTest {
 
     @Autowired
     FilmController filmController;
+    @Autowired
+    FilmService filmService;
 
     @ParameterizedTest(name = "{index}. Check create film with empty name: \"{arguments}\"")
     @ValueSource(strings = {" ", "  ", "   ", "    "})

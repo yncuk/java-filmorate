@@ -14,7 +14,6 @@ import lombok.With;
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
 import java.time.LocalDate;
-import java.util.Set;
 
 @Value
 @Builder(toBuilder = true)
@@ -29,7 +28,7 @@ public class Film {
     @NotNull
     Integer duration;
     @With
-    Set<Long> likes;
+    int likes;
 
     @JsonCreator
     public Film(
@@ -41,7 +40,7 @@ public class Film {
             @JsonDeserialize(using = LocalDateDeserializer.class)
             @JsonProperty("releaseDate") LocalDate releaseDate,
             @JsonProperty("duration") Integer duration,
-            @JsonProperty("likes") Set<Long> likes) {
+            @JsonProperty("likes") int likes) {
         this.id = id;
         this.name = name;
         this.description = description;
