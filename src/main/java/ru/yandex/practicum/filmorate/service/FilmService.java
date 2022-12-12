@@ -2,6 +2,7 @@ package ru.yandex.practicum.filmorate.service;
 
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import ru.yandex.practicum.filmorate.exceptions.NotFoundException;
 import ru.yandex.practicum.filmorate.exceptions.ValidationException;
@@ -13,6 +14,7 @@ import java.time.LocalDate;
 import java.util.*;
 import java.util.stream.Collectors;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class FilmService {
@@ -24,10 +26,12 @@ public class FilmService {
 
     public List<Film> giveMostPopularFilm(Integer count) {
         if (filmStorage.findAll() == null) {
+            log.info("Фильмов в списке нет, параметр = {}", filmStorage.findAll());
             return new ArrayList<>();
         }
         List<Film> filmList = new ArrayList<>(filmStorage.findAll());
         filmList.sort(COMPARATOR);
+        log.info("Возвращается отсортированный по популярности список");
         return filmList.stream().limit(count).collect(Collectors.toList());
     }
 
@@ -35,8 +39,10 @@ public class FilmService {
     public void putLike(Integer id, Integer userId) {
         Set<Long> likedFilm = userStorage.findById(userId).getLikedFilm();
         if (likedFilm == null) {
+            log.info("Пользователь {} еще не ставил лайки на фильмы", userStorage.findById(userId));
             likedFilm = new HashSet<>();
         } else if (likedFilm.contains((long) id)) {
+            log.info("Пользователь {} уже поставил лайк на этот фильм - {}", userStorage.findById(userId), filmStorage.findById(id));
             return;
         }
         likedFilm.add((long) id);
@@ -74,13 +80,13 @@ public class FilmService {
 
     private void validating(Film film) throws ValidationException {
         if (film.getDescription().length() > 200) {
-            //log.info("Длина описания {} > 200", film.getDescription().length());
+            log.info("Длина описания {} > 200", film.getDescription().length());
             throw new ValidationException("Максимальная длина описания — 200 символов");
         } else if (film.getReleaseDate().isBefore(movieBirthday)) {
-            //log.info("Дата релиза раньше {} и равна - {}", movieBirthday, film.getReleaseDate());
+            log.info("Дата релиза раньше {} и равна - {}", movieBirthday, film.getReleaseDate());
             throw new ValidationException("Дата релиза не может быть раньше дня рождения кино");
         } else if (film.getDuration() < 0) {
-            //log.info("Продолжительность фильма {} < 0", film.getDuration());
+            log.info("Продолжительность фильма {} < 0", film.getDuration());
             throw new ValidationException("Продолжительность фильма должна быть положительной");
         }
     }

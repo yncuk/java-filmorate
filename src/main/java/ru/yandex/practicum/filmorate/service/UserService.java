@@ -2,6 +2,7 @@ package ru.yandex.practicum.filmorate.service;
 
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import ru.yandex.practicum.filmorate.exceptions.NotFoundException;
 import ru.yandex.practicum.filmorate.exceptions.ValidationException;
@@ -12,6 +13,7 @@ import java.time.LocalDate;
 import java.util.*;
 import java.util.stream.Collectors;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class UserService {
@@ -84,10 +86,10 @@ public class UserService {
 
     private void validating(User user) throws ValidationException {
         if (user.getLogin().contains(" ")) {
-            //log.info("Логин: '{}' пустой или содержит пробелы", user.getLogin());
+            log.info("Логин: '{}' пустой или содержит пробелы", user.getLogin());
             throw new ValidationException("Логин не может быть пустым и содержать пробелы");
         } else if (user.getBirthday().isAfter(LocalDate.now())) {
-            //log.info("Дата рождения {} не может быть в будущем", user.getBirthday());
+            log.info("Дата рождения {} не может быть в будущем", user.getBirthday());
             throw new ValidationException("Дата рождения не может быть в будущем");
         }
     }
