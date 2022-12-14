@@ -4,7 +4,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
-import ru.yandex.practicum.filmorate.exceptions.NotFoundException;
+import ru.yandex.practicum.filmorate.exceptions.EntityNotFoundException;
 import ru.yandex.practicum.filmorate.exceptions.ValidationException;
 import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.storage.user.UserStorage;
@@ -19,6 +19,18 @@ import java.util.stream.Collectors;
 public class UserService {
 
     private final UserStorage userStorage;
+
+    public Collection<User> findAll() {
+        return userStorage.findAll();
+    }
+
+    public User findById(Integer id) throws EntityNotFoundException {
+        return userStorage.findById(id);
+    }
+
+    public List<User> giveFriends(Integer id) {
+        return userStorage.giveFriends(id);
+    }
 
     @SneakyThrows
     public List<User> giveMutualFriends(Integer userId, Integer otherUserId) {
@@ -77,7 +89,7 @@ public class UserService {
     private void deleteFriendMethod(Integer id, Integer friendId) {
         Set<Long> friends = userStorage.findById(friendId).getFriends();
         if (friends == null || !friends.contains((long) id)) {
-            throw new NotFoundException(String.format("Не найден %s в списке друзей %s",
+            throw new EntityNotFoundException(String.format("Не найден %s в списке друзей %s",
                     userStorage.findById(id), userStorage.findById(friendId)));
         }
         friends.remove((long) id);

@@ -4,7 +4,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
-import ru.yandex.practicum.filmorate.exceptions.NotFoundException;
+import ru.yandex.practicum.filmorate.exceptions.EntityNotFoundException;
 import ru.yandex.practicum.filmorate.exceptions.ValidationException;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.storage.film.FilmStorage;
@@ -23,6 +23,14 @@ public class FilmService {
     private final Comparator<Film> COMPARATOR = (o1, o2) ->
         Integer.compare(o2.getLikes(), o1.getLikes());
     private final LocalDate movieBirthday = LocalDate.of(1895, 12, 28);
+
+    public Collection<Film> findAll() {
+        return filmStorage.findAll();
+    }
+
+    public Film findById(Integer id) throws EntityNotFoundException {
+        return filmStorage.findById(id);
+    }
 
     public List<Film> giveMostPopularFilm(Integer count) {
         if (filmStorage.findAll() == null) {
@@ -58,7 +66,7 @@ public class FilmService {
         if (likedFilm == null) {
             return;
         } else if (!likedFilm.contains((long) id)) {
-            throw new NotFoundException("Не найден фильм в понравившихся");
+            throw new EntityNotFoundException("Не найден фильм в понравившихся");
         }
         likedFilm.remove((long) id);
         int likes = filmStorage.findById(id).getLikes();

@@ -1,6 +1,6 @@
 package ru.yandex.practicum.filmorate.storage.film;
 
-import ru.yandex.practicum.filmorate.exceptions.NotFoundException;
+import ru.yandex.practicum.filmorate.exceptions.EntityNotFoundException;
 import ru.yandex.practicum.filmorate.exceptions.ValidationException;
 import ru.yandex.practicum.filmorate.model.Film;
 
@@ -9,9 +9,9 @@ import java.util.Collection;
 public interface FilmStorage {
     Collection<Film> findAll();
 
-    Film findById(Integer id) throws NotFoundException;
+    Film findById(Integer id) throws EntityNotFoundException;
 
     Film create(Film film) throws ValidationException;
 
-    Film update(Film film) throws ValidationException, NotFoundException;
+    Film update(Film film) throws ValidationException, EntityNotFoundException;
 }

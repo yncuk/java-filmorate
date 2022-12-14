@@ -2,10 +2,9 @@ package ru.yandex.practicum.filmorate.controllers;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
-import ru.yandex.practicum.filmorate.exceptions.NotFoundException;
+import ru.yandex.practicum.filmorate.exceptions.EntityNotFoundException;
 import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.service.UserService;
-import ru.yandex.practicum.filmorate.storage.user.UserStorage;
 
 import javax.validation.Valid;
 import java.util.*;
@@ -15,22 +14,21 @@ import java.util.*;
 @RequiredArgsConstructor
 public class UserController {
 
-    private final UserStorage userStorage;
     private final UserService userService;
 
     @GetMapping
     public Collection<User> findAll() {
-        return userStorage.findAll();
+        return userService.findAll();
     }
 
     @GetMapping("/{id}")
-    public User findById(@PathVariable Integer id) throws NotFoundException {
-        return userStorage.findById(id);
+    public User findById(@PathVariable Integer id) throws EntityNotFoundException {
+        return userService.findById(id);
     }
 
     @GetMapping("/{id}/friends")
     public List<User> findAllFriends(@PathVariable Integer id) {
-        return userStorage.giveFriends(id);
+        return userService.giveFriends(id);
     }
 
     @GetMapping("/{id}/friends/common/{otherId}")
