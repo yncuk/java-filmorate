@@ -15,6 +15,7 @@ import javax.validation.constraints.Email;
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
 import java.time.LocalDate;
+import java.util.Set;
 
 @Value
 @Builder(toBuilder = true)
@@ -29,6 +30,10 @@ public class User {
     String name;
     @NotNull
     LocalDate birthday;
+    @With
+    Set<Long> friends;
+    @With
+    Set<Long> likedFilm;
 
     @JsonCreator
     public User(
@@ -39,11 +44,15 @@ public class User {
             @JsonFormat(pattern = "yyyy-MM-dd")
             @JsonSerialize(using = LocalDateSerializer.class)
             @JsonDeserialize(using = LocalDateDeserializer.class)
-            @JsonProperty("birthday") LocalDate birthday) {
+            @JsonProperty("birthday") LocalDate birthday,
+            @JsonProperty("friends") Set<Long> friends,
+            @JsonProperty("likedFilm") Set<Long> likedFilm) {
         this.id = id;
         this.email = email;
         this.login = login;
         this.name = name;
         this.birthday = birthday;
+        this.friends = friends;
+        this.likedFilm = likedFilm;
     }
 }
