@@ -14,6 +14,7 @@ import lombok.With;
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
 import java.time.LocalDate;
+import java.util.LinkedHashSet;
 
 @Value
 @Builder(toBuilder = true)
@@ -28,7 +29,9 @@ public class Film {
     @NotNull
     Integer duration;
     @With
-    int likes;
+    int rate;
+    LinkedHashSet<Mpa> genres;
+    Mpa mpa;
 
     @JsonCreator
     public Film(
@@ -40,12 +43,16 @@ public class Film {
             @JsonDeserialize(using = LocalDateDeserializer.class)
             @JsonProperty("releaseDate") LocalDate releaseDate,
             @JsonProperty("duration") Integer duration,
-            @JsonProperty("likes") int likes) {
+            @JsonProperty("rate") int rate,
+            @JsonProperty("genres") LinkedHashSet<Mpa> genres,
+            @JsonProperty("mpa") Mpa mpa) {
         this.id = id;
         this.name = name;
         this.description = description;
         this.releaseDate = releaseDate;
         this.duration = duration;
-        this.likes = likes;
+        this.rate = rate;
+        this.genres = genres;
+        this.mpa = mpa;
     }
 }

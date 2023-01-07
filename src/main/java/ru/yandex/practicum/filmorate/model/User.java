@@ -33,7 +33,7 @@ public class User {
     @With
     Set<Long> friends;
     @With
-    Set<Long> likedFilm;
+    Set<Long> likedFilms;
 
     @JsonCreator
     public User(
@@ -46,13 +46,13 @@ public class User {
             @JsonDeserialize(using = LocalDateDeserializer.class)
             @JsonProperty("birthday") LocalDate birthday,
             @JsonProperty("friends") Set<Long> friends,
-            @JsonProperty("likedFilm") Set<Long> likedFilm) {
+            @JsonProperty("likedFilm") Set<Long> likedFilms) {
         this.id = id;
         this.email = email;
         this.login = login;
         this.name = name;
         this.birthday = birthday;
         this.friends = friends;
-        this.likedFilm = likedFilm;
+        this.likedFilms = likedFilms;
     }
 }

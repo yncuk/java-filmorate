@@ -1,23 +1,31 @@
 package ru.yandex.practicum.filmorate.controllers;
 
+import lombok.RequiredArgsConstructor;
 import org.apache.commons.lang3.StringUtils;
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
+import ru.yandex.practicum.filmorate.exceptions.EntityNotFoundException;
 import ru.yandex.practicum.filmorate.exceptions.ValidationException;
 import ru.yandex.practicum.filmorate.mapper.CustomMapper;
 import ru.yandex.practicum.filmorate.model.Film;
+import ru.yandex.practicum.filmorate.model.Mpa;
 import ru.yandex.practicum.filmorate.model.User;
+import ru.yandex.practicum.filmorate.storage.film.FilmDbStorage;
 
 import java.time.LocalDate;
 import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Optional;
 
+import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
@@ -27,6 +35,8 @@ import static ru.yandex.practicum.filmorate.mapper.CustomMapper.getMapper;
 @SpringBootTest
 @AutoConfigureMockMvc
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
+@AutoConfigureTestDatabase
+@RequiredArgsConstructor(onConstructor_ = @Autowired)
 class FilmControllerTest {
     @Autowired
     private MockMvc mockMvc;
@@ -34,6 +44,7 @@ class FilmControllerTest {
     private FilmController filmController;
     @Autowired
     private UserController userController;
+    private final FilmDbStorage filmStorage;
 
     @Order(1)
     @ParameterizedTest(name = "{index}. Check create film with empty name: \"{arguments}\"")
@@ -112,23 +123,32 @@ class FilmControllerTest {
     @Order(5)
     @Test
     @DisplayName("Check create film without mistakes")
-    void createFilmWithoutMistakes() throws ValidationException {
+    void createFilmWithoutMistakes() throws ValidationException, EntityNotFoundException {
         // when
         Film film = Film.builder()
                 .name("nisi eiusmod")
                 .description("adipisicing")
                 .releaseDate(LocalDate.of(1967, 3, 25))
                 .duration(100)
+                .rate(4)
+                .genres(new LinkedHashSet<>())
+                .mpa(new Mpa(1, "G"))
                 .build();
-        Film film1 = filmController.create(film);
+        filmController.create(film);
+        Optional<Film> filmOptional = Optional.ofNullable(filmStorage.findById(1));
         // then
-        assertAll(
-                () -> assertEquals(1, film1.getId()),
-                () -> assertEquals("nisi eiusmod", film1.getName()),
-                () -> assertEquals("adipisicing", film1.getDescription()),
-                () -> assertEquals(LocalDate.of(1967, 3, 25), film1.getReleaseDate()),
-                () -> assertEquals(100, film1.getDuration())
-        );
+        assertThat(filmOptional)
+                .isPresent()
+                .hasValueSatisfying(film1 ->
+                        assertThat(film1).hasFieldOrPropertyWithValue("id", 1)
+                                .hasFieldOrPropertyWithValue("name", "nisi eiusmod")
+                                .hasFieldOrPropertyWithValue("description", "adipisicing")
+                                .hasFieldOrPropertyWithValue("releaseDate", LocalDate.of(1967, 3, 25))
+                                .hasFieldOrPropertyWithValue("duration", 100)
+                                .hasFieldOrPropertyWithValue("rate", 4)
+                                .hasFieldOrPropertyWithValue("genres", new LinkedHashSet<>())
+                                .hasFieldOrPropertyWithValue("mpa", new Mpa(1, "G"))
+                );
     }
 
     @Order(6)
@@ -181,7 +201,7 @@ class FilmControllerTest {
     @DisplayName("Update film")
     void updateFilm() throws Exception {
         // when
-        Film film = filmController.findById(1).withLikes(2);
+        Film film = filmController.findById(1).withRate(2);
         filmController.update(film);
         // then
         mockMvc.perform(put("/films")
@@ -196,7 +216,7 @@ class FilmControllerTest {
                 () -> assertEquals("adipisicing", filmCurrent.getDescription()),
                 () -> assertEquals(LocalDate.of(1967, 3, 25), filmCurrent.getReleaseDate()),
                 () -> assertEquals(100, filmCurrent.getDuration()),
-                () -> assertEquals(2, filmCurrent.getLikes())
+                () -> assertEquals(2, filmCurrent.getRate())
         );
     }
 
@@ -210,12 +230,16 @@ class FilmControllerTest {
                 .description("New film about friends")
                 .releaseDate(LocalDate.of(1999, 4, 30))
                 .duration(120)
+                .rate(0)
+                .genres(new LinkedHashSet<>())
+                .mpa(new Mpa(2, "PG"))
                 .build();
         filmController.create(film);
         User user = User.builder()
                 .email("last_name@mail.ru")
                 .login("last_name")
                 .birthday(LocalDate.of(2000, 12, 20))
+                .likedFilms(new HashSet<>(List.of()))
                 .build();
         userController.create(user);
         // then
@@ -230,9 +254,10 @@ class FilmControllerTest {
                 () -> assertEquals("New film about friends", filmCurrent.getDescription()),
                 () -> assertEquals(LocalDate.of(1999, 4, 30), filmCurrent.getReleaseDate()),
                 () -> assertEquals(120, filmCurrent.getDuration()),
-                () -> assertEquals(1, filmCurrent.getLikes())
+                () -> assertEquals(1, filmCurrent.getRate()),
+                () -> assertEquals(new Mpa(2, "PG"), filmCurrent.getMpa()),
+                () -> assertEquals(new HashSet<>(List.of(2L)), userCurrent.getLikedFilms())
         );
-        assertEquals(new HashSet<>(List.of(2L)), userCurrent.getLikedFilm());
     }
 
     @Order(11)
@@ -267,7 +292,42 @@ class FilmControllerTest {
 
         Film filmCurrent = filmController.findById(2);
         User userCurrent = userController.findById(1);
-        assertEquals(0, filmCurrent.getLikes());
-        assertEquals(new HashSet<>(), userCurrent.getLikedFilm());
+        assertEquals(0, filmCurrent.getRate());
+        assertEquals(new HashSet<>(), userCurrent.getLikedFilms());
+    }
+
+    @Order(14)
+    @Test
+    @DisplayName("Give genre for film with id 3")
+    void fiveGenreForFilm() throws Exception {
+        // when
+        LinkedHashSet<Mpa> genres = new LinkedHashSet<>();
+        genres.add(new Mpa(1, "Комедия"));
+        Film film = Film.builder()
+                .name("New film2")
+                .description("New film about genres")
+                .releaseDate(LocalDate.of(2012, 7, 11))
+                .duration(12)
+                .rate(5)
+                .genres(genres)
+                .mpa(new Mpa(2, "PG"))
+                .build();
+
+        filmController.create(film);
+        Optional<Film> filmOptional = Optional.ofNullable(filmStorage.findById(3));
+        System.out.println(filmStorage.findById(3));
+        // then
+        assertThat(filmOptional)
+                .isPresent()
+                .hasValueSatisfying(film1 ->
+                        assertThat(film1).hasFieldOrPropertyWithValue("id", 3)
+                                .hasFieldOrPropertyWithValue("name", "New film2")
+                                .hasFieldOrPropertyWithValue("description", "New film about genres")
+                                .hasFieldOrPropertyWithValue("releaseDate", LocalDate.of(2012, 7, 11))
+                                .hasFieldOrPropertyWithValue("duration", 12)
+                                .hasFieldOrPropertyWithValue("rate", 5)
+                                .hasFieldOrPropertyWithValue("genres", genres)
+                                .hasFieldOrPropertyWithValue("mpa", new Mpa(2, "PG"))
+                );
     }
 }
