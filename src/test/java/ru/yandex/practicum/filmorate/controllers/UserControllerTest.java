@@ -87,12 +87,12 @@ class UserControllerTest {
                 .likedFilms(new HashSet<>(List.of()))
                 .build();
         userController.create(user);
-        Optional<User> userOptional = Optional.ofNullable(userStorage.findById(2));
+        Optional<User> userOptional = Optional.ofNullable(userStorage.findById(1));
         // then
         assertThat(userOptional)
                 .isPresent()
                 .hasValueSatisfying(user2 ->
-                        assertThat(user2).hasFieldOrPropertyWithValue("id", 2)
+                        assertThat(user2).hasFieldOrPropertyWithValue("id", 1)
                                 .hasFieldOrPropertyWithValue("email", "name@mail.ru")
                                 .hasFieldOrPropertyWithValue("login", "name")
                                 .hasFieldOrPropertyWithValue("name", "name")
@@ -131,12 +131,12 @@ class UserControllerTest {
                 .likedFilms(new HashSet<>(List.of()))
                 .build();
         userController.create(user);
-        Optional<User> userOptional = Optional.ofNullable(userStorage.findById(3));
+        Optional<User> userOptional = Optional.ofNullable(userStorage.findById(2));
         // then
         assertThat(userOptional)
                 .isPresent()
                 .hasValueSatisfying(user1 ->
-                        assertThat(user1).hasFieldOrPropertyWithValue("id", 3)
+                        assertThat(user1).hasFieldOrPropertyWithValue("id", 2)
                                 .hasFieldOrPropertyWithValue("email", "lastName@mail.ru")
                                 .hasFieldOrPropertyWithValue("login", "lastName")
                                 .hasFieldOrPropertyWithValue("name", "lastName")
@@ -169,7 +169,7 @@ class UserControllerTest {
     void updateUser() throws Exception {
         // when
         User user = User.builder()
-                .id(3)
+                .id(2)
                 .email("name2@yandex.ru")
                 .login("name2")
                 .name("name2")
@@ -182,12 +182,12 @@ class UserControllerTest {
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().is2xxSuccessful());
 
-        Optional<User> userOptional = Optional.ofNullable(userStorage.findById(3));
+        Optional<User> userOptional = Optional.ofNullable(userStorage.findById(2));
         // then
         assertThat(userOptional)
                 .isPresent()
                 .hasValueSatisfying(user1 ->
-                        assertThat(user1).hasFieldOrPropertyWithValue("id", 3).
+                        assertThat(user1).hasFieldOrPropertyWithValue("id", 2).
                                 hasFieldOrPropertyWithValue("email", "name2@yandex.ru").
                                 hasFieldOrPropertyWithValue("login", "name2").
                                 hasFieldOrPropertyWithValue("name", "name2").
@@ -200,9 +200,9 @@ class UserControllerTest {
     @DisplayName("Get user")
     void getUser() throws Exception {
         // then
-        mockMvc.perform(get("/users/3"))
+        mockMvc.perform(get("/users/2"))
                 .andExpect(status().is2xxSuccessful())
-                .andExpect(jsonPath("$.id").value(3))
+                .andExpect(jsonPath("$.id").value(2))
                 .andExpect(jsonPath("$.email").value("name2@yandex.ru"))
                 .andExpect(jsonPath("$.login").value("name2"))
                 .andExpect(jsonPath("$.name").value("name2"))
@@ -221,18 +221,18 @@ class UserControllerTest {
 
     @Order(10)
     @Test
-    @DisplayName("User with ID = 2 add friend user with ID = 3")
-    void userId2AddFriendUserId3() throws Exception {
+    @DisplayName("User with ID = 1 add friend user with ID = 2")
+    void userId1AddFriendUserId2() throws Exception {
         // then
-        mockMvc.perform(put("/users/2/friends/3"))
+        mockMvc.perform(put("/users/1/friends/2"))
                 .andExpect(status().is2xxSuccessful());
-        assertTrue(userController.findById(2).getFriends().contains(3L));
+        assertTrue(userController.findById(1).getFriends().contains(2L));
     }
 
     @Order(11)
     @Test
-    @DisplayName("User with ID = 4 add friend user with ID = 3")
-    void userId4AddFriendUserId3() throws Exception {
+    @DisplayName("User with ID = 3 add friend user with ID = 2")
+    void userId3AddFriendUserId2() throws Exception {
         // when
         User user = User.builder()
                 .email("third_name@mail.ru")
@@ -242,9 +242,9 @@ class UserControllerTest {
                 .build();
         userController.create(user);
         // then
-        mockMvc.perform(put("/users/4/friends/3"))
+        mockMvc.perform(put("/users/3/friends/2"))
                 .andExpect(status().is2xxSuccessful());
-        assertTrue(userController.findById(4).getFriends().contains(3L));
+        assertTrue(userController.findById(3).getFriends().contains(2L));
     }
 
     @Order(12)
@@ -258,17 +258,17 @@ class UserControllerTest {
 
     @Order(13)
     @Test
-    @DisplayName("Check common friend 2 and 4 user id")
-    void checkCommonFriendUser2AndUser4() throws Exception {
+    @DisplayName("Check common friend 1 and 3 user id")
+    void checkCommonFriendUser1AndUser3() throws Exception {
         // when
-        Optional<User> userOptional = Optional.ofNullable(userService.giveMutualFriends(2, 4).get(0));
+        Optional<User> userOptional = Optional.ofNullable(userService.giveMutualFriends(1, 3).get(0));
         // then
-        mockMvc.perform(get("/users/2/friends/common/4"))
+        mockMvc.perform(get("/users/1/friends/common/3"))
                 .andExpect(status().is2xxSuccessful());
         assertThat(userOptional)
                 .isPresent()
                 .hasValueSatisfying(user1 ->
-                        assertThat(user1).hasFieldOrPropertyWithValue("id", 3).
+                        assertThat(user1).hasFieldOrPropertyWithValue("id", 2).
                                 hasFieldOrPropertyWithValue("email", "name2@yandex.ru").
                                 hasFieldOrPropertyWithValue("login", "name2").
                                 hasFieldOrPropertyWithValue("name", "name2").
@@ -278,27 +278,27 @@ class UserControllerTest {
 
     @Order(14)
     @Test
-    @DisplayName("User with ID = 2 delete friend with ID = 3 ")
+    @DisplayName("User with ID = 1 delete friend with ID = 2 ")
     void userWithId1DeleteFriendWithId2() throws Exception {
         // then
-        mockMvc.perform(delete("/users/2/friends/3"))
+        mockMvc.perform(delete("/users/1/friends/2"))
                 .andExpect(status().is2xxSuccessful());
-        assertFalse(userController.findById(2).getFriends().contains(3L));
+        assertFalse(userController.findById(1).getFriends().contains(2L));
     }
 
     @Order(15)
     @Test
-    @DisplayName("Find all friend user ID = 4")
-    void findAllFriendUser4() throws Exception {
+    @DisplayName("Find all friend user ID = 3")
+    void findAllFriendUser3() throws Exception {
         // when
-        Optional<User> userOptional = Optional.ofNullable(userStorage.giveFriends(4).get(0));
+        Optional<User> userOptional = Optional.ofNullable(userStorage.giveFriends(3).get(0));
         // then
-        mockMvc.perform(get("/users/4/friends"))
+        mockMvc.perform(get("/users/3/friends"))
                 .andExpect(status().is2xxSuccessful());
         assertThat(userOptional)
                 .isPresent()
                 .hasValueSatisfying(user1 ->
-                        assertThat(user1).hasFieldOrPropertyWithValue("id", 3).
+                        assertThat(user1).hasFieldOrPropertyWithValue("id", 2).
                                 hasFieldOrPropertyWithValue("email", "name2@yandex.ru").
                                 hasFieldOrPropertyWithValue("login", "name2").
                                 hasFieldOrPropertyWithValue("name", "name2").
