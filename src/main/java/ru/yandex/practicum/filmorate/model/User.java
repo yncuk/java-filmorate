@@ -22,9 +22,9 @@ import java.util.Set;
 public class User {
     @With
     int id;
-    @NotNull @Email
+    @NotBlank @Email
     String email;
-    @NotNull @NotBlank
+    @NotBlank
     String login;
     @With
     String name;

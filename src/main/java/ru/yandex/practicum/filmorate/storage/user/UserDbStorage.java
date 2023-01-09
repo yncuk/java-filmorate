@@ -3,11 +3,15 @@ package ru.yandex.practicum.filmorate.storage.user;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Primary;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.jdbc.support.GeneratedKeyHolder;
+import org.springframework.jdbc.support.KeyHolder;
 import org.springframework.stereotype.Component;
 import ru.yandex.practicum.filmorate.exceptions.EntityNotFoundException;
 import ru.yandex.practicum.filmorate.exceptions.ValidationException;
 import ru.yandex.practicum.filmorate.model.User;
 
+import java.sql.Date;
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.*;
@@ -20,71 +24,79 @@ public class UserDbStorage implements UserStorage {
 
     @Override
     public Collection<User> findAll() {
-        String sql = "select * from users";
-        return jdbcTemplate.query(sql, this::makeUser);
+        String requestAllUsers = "select * from users";
+        return jdbcTemplate.query(requestAllUsers, this::makeUser);
     }
 
     @Override
     public User findById(Integer id) throws EntityNotFoundException {
-        String sql = "select * from users where user_id = ?";
-        if (jdbcTemplate.query(sql, this::makeId, id).isEmpty()) {
+        String requestUserById = "select * from users where user_id = ?";
+        if (jdbcTemplate.query(requestUserById, this::makeId, id).isEmpty()) {
             throw new EntityNotFoundException("Не найден пользователь");
         }
-        return jdbcTemplate.queryForObject(sql, this::makeUser, id);
+        return jdbcTemplate.queryForObject(requestUserById, this::makeUser, id);
     }
 
     @Override
     public List<User> giveFriends(Integer id) {
-        String sql = "select users.user_id, users.email, users.login, users.user_name, users.birthday, friend.friend_id from friend join users on friend.friend_id = users.user_id where friend.user_id = ? group by users.user_id";
-        return jdbcTemplate.query(sql, this::makeUser, id);
+        String requestToReturnUserFriends = "select users.user_id, users.email, users.login, users.user_name, " +
+                "users.birthday, friend.friend_id " +
+                "from friend " +
+                "join users on friend.friend_id = users.user_id " +
+                "where friend.user_id = ?";
+        return jdbcTemplate.query(requestToReturnUserFriends, this::makeUser, id);
     }
 
     @Override
     public User create(User user) throws ValidationException {
-        String sql = "insert into users (email, login, user_name, birthday) values (?, ?, ?, ?)";
-        jdbcTemplate.update(sql, user.getEmail(), user.getLogin(), user.getName(), user.getBirthday());
+        String userCreationRequest = "insert into users (email, login, user_name, birthday) values (?, ?, ?, ?)";
+        KeyHolder keyHolder = new GeneratedKeyHolder();
+        jdbcTemplate.update(connection -> {
+            PreparedStatement stmt = connection.prepareStatement(userCreationRequest, new String[]{"user_id"});
+            stmt.setString(1, user.getEmail());
+            stmt.setString(2, user.getLogin());
+            stmt.setString(3, user.getName());
+            stmt.setDate(4,  Date.valueOf(user.getBirthday()));
+            return stmt;
+        }, keyHolder);
+        Integer userId = (Integer) keyHolder.getKey();
         if (user.getFriends() != null) {
             for (long friend : user.getFriends()) {
-                String sql3 = "insert into friend (friend_id, status, user_id) values (?, ?, ?)";
-                jdbcTemplate.update(sql3, friend, true, user.getId());
+                String userFriendRequest = "insert into friend (friend_id, status, user_id) values (?, ?, ?)";
+                jdbcTemplate.update(userFriendRequest, friend, true, user.getId());
             }
         }
         if (user.getLikedFilms() != null) {
             for (long likedFilm : user.getLikedFilms()) {
-                String sql5 = "insert into liked_film (user_id, film_id) values (?, ?)";
-                jdbcTemplate.update(sql5, user.getId(), likedFilm);
+                String requestCreateUserLikes = "insert into liked_film (user_id, film_id) values (?, ?)";
+                jdbcTemplate.update(requestCreateUserLikes, user.getId(), likedFilm);
             }
         }
-
-        String sql2 = "select * from users where email = ? and login = ? and user_name = ? and birthday = ?";
-        return jdbcTemplate.queryForObject(sql2, this::makeUser, user.getEmail(), user.getLogin(),
-                user.getName(), user.getBirthday());
+        return user.withId(userId);
     }
 
     @Override
     public User update(User user) throws ValidationException, EntityNotFoundException {
         findById(user.getId());
-        String sql = "update users set email = ?, login = ?, user_name = ?, birthday = ? where user_id = ?";
-        jdbcTemplate.update(sql, user.getEmail(), user.getLogin(), user.getName(), user.getBirthday(), user.getId());
+        String userUpdateRequest = "update users set email = ?, login = ?, user_name = ?, birthday = ? where user_id = ?";
+        jdbcTemplate.update(userUpdateRequest, user.getEmail(), user.getLogin(), user.getName(), user.getBirthday(), user.getId());
         if (user.getFriends() != null) {
-            String sql2 = "delete from FRIEND where user_id = ?;";
-            jdbcTemplate.update(sql2, user.getId());
+            String requestDeleteUserFriends = "delete from FRIEND where user_id = ?;";
+            jdbcTemplate.update(requestDeleteUserFriends, user.getId());
             for (long friend : user.getFriends()) {
-                String sql3 = "insert into friend (friend_id, status, user_id) values (?, ?, ?)";
-                jdbcTemplate.update(sql3, friend, true, user.getId());
+                String requestUpdateUserFriends = "insert into friend (friend_id, status, user_id) values (?, ?, ?)";
+                jdbcTemplate.update(requestUpdateUserFriends, friend, true, user.getId());
             }
         }
         if (user.getLikedFilms() != null) {
-            String sql4 = "delete from liked_film where user_id = ?;";
-            jdbcTemplate.update(sql4, user.getId());
+            String requestDeleteUserLikes = "delete from liked_film where user_id = ?;";
+            jdbcTemplate.update(requestDeleteUserLikes, user.getId());
             for (long likedFilm : user.getLikedFilms()) {
-                String sql5 = "insert into liked_film (user_id, film_id) values (?, ?)";
-                jdbcTemplate.update(sql5, user.getId(), likedFilm);
+                String requestUpdateUserLikes = "insert into liked_film (user_id, film_id) values (?, ?)";
+                jdbcTemplate.update(requestUpdateUserLikes, user.getId(), likedFilm);
             }
         }
-        String sql6 = "select * from users where email = ? and login = ? and user_name = ? and birthday = ?";
-        return jdbcTemplate.queryForObject(sql6, this::makeUser, user.getEmail(), user.getLogin(),
-                user.getName(), user.getBirthday());
+        return user;
     }
 
     private User makeUser(ResultSet rs, int rowNum) throws SQLException {
@@ -120,7 +132,10 @@ public class UserDbStorage implements UserStorage {
     }
 
     public List<Integer> giveLikedFilms(Integer id) {
-        String sql = "select liked_film.film_id from liked_film join users on liked_film.user_id = users.user_id where liked_film.user_id = ? group by users.user_id";
-        return jdbcTemplate.query(sql, this::makeFilmId, id);
+        String requestUserLikes = "select liked_film.film_id " +
+                "from liked_film " +
+                "join users on liked_film.user_id = users.user_id " +
+                "where liked_film.user_id = ?";
+        return jdbcTemplate.query(requestUserLikes, this::makeFilmId, id);
     }
 }

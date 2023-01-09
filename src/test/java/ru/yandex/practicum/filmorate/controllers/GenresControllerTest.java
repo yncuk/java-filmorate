@@ -9,7 +9,7 @@ import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMock
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.web.servlet.MockMvc;
 import ru.yandex.practicum.filmorate.exceptions.EntityNotFoundException;
-import ru.yandex.practicum.filmorate.model.Mpa;
+import ru.yandex.practicum.filmorate.model.Genres;
 import ru.yandex.practicum.filmorate.storage.genres.GenresDbStorage;
 
 import java.util.*;
@@ -34,15 +34,15 @@ class GenresControllerTest {
     @DisplayName("Test find all genres")
     void testFindAllGenres() {
         // when
-        List<Mpa> genres = (List<Mpa>) genresController.findAll();
+        List<Genres> genres = (List<Genres>) genresController.findAll();
         // then
         assertAll(
-                () -> assertEquals(new Mpa(1, "Комедия"), genres.get(0)),
-                () -> assertEquals(new Mpa(2, "Драма"), genres.get(1)),
-                () -> assertEquals(new Mpa(3, "Мультфильм"), genres.get(2)),
-                () -> assertEquals(new Mpa(4, "Триллер"), genres.get(3)),
-                () -> assertEquals(new Mpa(5, "Документальный"), genres.get(4)),
-                () -> assertEquals(new Mpa(6, "Боевик"), genres.get(5))
+                () -> assertEquals(new Genres(1, "Комедия"), genres.get(0)),
+                () -> assertEquals(new Genres(2, "Драма"), genres.get(1)),
+                () -> assertEquals(new Genres(3, "Мультфильм"), genres.get(2)),
+                () -> assertEquals(new Genres(4, "Триллер"), genres.get(3)),
+                () -> assertEquals(new Genres(5, "Документальный"), genres.get(4)),
+                () -> assertEquals(new Genres(6, "Боевик"), genres.get(5))
         );
 
     }
@@ -51,9 +51,9 @@ class GenresControllerTest {
     @DisplayName("Test find by id genre")
     void testFindById() throws EntityNotFoundException {
         // when
-        Mpa genre = genresStorage.findById(1);
+        Genres genre = genresStorage.findById(1);
         // then
-        assertEquals(new Mpa(1, "Комедия"), genre);
+        assertEquals(new Genres(1, "Комедия"), genre);
     }
 
     @Test

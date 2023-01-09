@@ -21,7 +21,7 @@ import java.util.LinkedHashSet;
 public class Film {
     @With
     int id;
-    @NotNull @NotBlank String name;
+    @NotBlank String name;
     @NotNull
     String description;
     @NotNull
@@ -30,7 +30,7 @@ public class Film {
     Integer duration;
     @With
     int rate;
-    LinkedHashSet<Mpa> genres;
+    LinkedHashSet<Genres> genres;
     Mpa mpa;
 
     @JsonCreator
@@ -44,7 +44,7 @@ public class Film {
             @JsonProperty("releaseDate") LocalDate releaseDate,
             @JsonProperty("duration") Integer duration,
             @JsonProperty("rate") int rate,
-            @JsonProperty("genres") LinkedHashSet<Mpa> genres,
+            @JsonProperty("genres") LinkedHashSet<Genres> genres,
             @JsonProperty("mpa") Mpa mpa) {
         this.id = id;
         this.name = name;

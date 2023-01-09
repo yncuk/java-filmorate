@@ -15,6 +15,7 @@ import ru.yandex.practicum.filmorate.exceptions.EntityNotFoundException;
 import ru.yandex.practicum.filmorate.exceptions.ValidationException;
 import ru.yandex.practicum.filmorate.mapper.CustomMapper;
 import ru.yandex.practicum.filmorate.model.Film;
+import ru.yandex.practicum.filmorate.model.Genres;
 import ru.yandex.practicum.filmorate.model.Mpa;
 import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.storage.film.FilmDbStorage;
@@ -301,8 +302,8 @@ class FilmControllerTest {
     @DisplayName("Give genre for film with id 3")
     void fiveGenreForFilm() throws Exception {
         // when
-        LinkedHashSet<Mpa> genres = new LinkedHashSet<>();
-        genres.add(new Mpa(1, "Комедия"));
+        LinkedHashSet<Genres> genres = new LinkedHashSet<>();
+        genres.add(new Genres(1, "Комедия"));
         Film film = Film.builder()
                 .name("New film2")
                 .description("New film about genres")

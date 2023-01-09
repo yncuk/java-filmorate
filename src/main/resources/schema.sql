@@ -1,10 +1,10 @@
 create table IF NOT EXISTS FILMS
 (
     FILM_ID      INTEGER auto_increment,
-    FILM_NAME    CHARACTER VARYING      not null,
-    DESCRIPTION  CHARACTER VARYING(200) not null,
+    FILM_NAME    VARCHAR      not null,
+    DESCRIPTION  VARCHAR(200) not null,
     RELEASE_DATE DATE                   not null,
-    DURATION     CHARACTER VARYING      not null,
+    DURATION     VARCHAR      not null,
     RATE        INTEGER,
     constraint FILMS_PK
         primary key (FILM_ID)
@@ -12,9 +12,11 @@ create table IF NOT EXISTS FILMS
 create table IF NOT EXISTS USERS
 (
     USER_ID   INTEGER auto_increment,
-    EMAIL     CHARACTER VARYING not null,
-    LOGIN     CHARACTER VARYING not null,
-    USER_NAME CHARACTER VARYING,
+    EMAIL     VARCHAR not null
+        unique,
+    LOGIN     VARCHAR not null
+        unique,
+    USER_NAME VARCHAR,
     BIRTHDAY  DATE              not null,
     constraint USERS_PK
         primary key (USER_ID)
@@ -23,14 +25,14 @@ create table IF NOT EXISTS GENRE
 (
     GENRE_ID   INTEGER auto_increment
         primary key,
-    GENRE_NAME CHARACTER VARYING
+    GENRE_NAME VARCHAR
 );
 create table IF NOT EXISTS FILM_GENRE
 (
-    FILM_GENRE_ID INTEGER auto_increment
-        primary key,
     FILM_ID  INTEGER not null,
     GENRE_ID INTEGER not null,
+    constraint FILM_GENRE_PK
+        primary key (FILM_ID, GENRE_ID),
     constraint FILM_GENRE_FILMS_FILM_ID_FK
         foreign key (FILM_ID) references FILMS
             on delete cascade,
@@ -42,7 +44,7 @@ create table IF NOT EXISTS CATEGORY
 (
     CATEGORY_ID   INTEGER auto_increment
         primary key,
-    CATEGORY_NAME CHARACTER VARYING
+    CATEGORY_NAME VARCHAR
 );
 create table IF NOT EXISTS FILM_CATEGORY
 (
@@ -59,10 +61,10 @@ create table IF NOT EXISTS FILM_CATEGORY
 );
 create table IF NOT EXISTS LIKED_FILM
 (
-    LIKED_FILM_ID INTEGER auto_increment
-        primary key,
     USER_ID INTEGER not null,
     FILM_ID INTEGER not null,
+    constraint LIKED_FILM_PK
+        primary key (USER_ID, FILM_ID),
     constraint LIKED_FILM_FILMS_FILM_ID_FK
         foreign key (FILM_ID) references FILMS
             on delete cascade,
@@ -72,12 +74,11 @@ create table IF NOT EXISTS LIKED_FILM
 );
 create table IF NOT EXISTS FRIEND
 (
-    PRIMARY_ID INTEGER auto_increment,
-    USER_ID    INTEGER               not null,
-    FRIEND_ID  INTEGER               not null,
-    STATUS     BOOLEAN default FALSE not null,
-    constraint "FRIEND_pk"
-        primary key (PRIMARY_ID),
+    USER_ID   INTEGER               not null,
+    FRIEND_ID INTEGER               not null,
+    STATUS    BOOLEAN default FALSE not null,
+    constraint FRIEND_PK
+        primary key (USER_ID, FRIEND_ID),
     constraint FRIEND_USERS_USER_ID_FK
         foreign key (USER_ID) references USERS
             on delete cascade,

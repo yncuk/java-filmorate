@@ -12,7 +12,6 @@ import ru.yandex.practicum.filmorate.storage.user.UserStorage;
 
 import java.time.LocalDate;
 import java.util.*;
-import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -20,8 +19,6 @@ import java.util.stream.Collectors;
 public class FilmService {
     private final FilmStorage filmStorage;
     private final UserStorage userStorage;
-    private final Comparator<Film> COMPARATOR = (o1, o2) ->
-            Integer.compare(o2.getRate(), o1.getRate());
     private final LocalDate movieBirthday = LocalDate.of(1895, 12, 28);
 
     public Collection<Film> findAll() {
@@ -33,14 +30,12 @@ public class FilmService {
     }
 
     public List<Film> giveMostPopularFilm(Integer count) {
-        if (filmStorage.findAll() == null) {
-            log.info("Фильмов в списке нет, параметр = {}", filmStorage.findAll());
+        if (filmStorage.giveMostPopularFilms(count) == null) {
+            log.info("Фильмов в списке нет, параметр = {}", filmStorage.giveMostPopularFilms(count));
             return new ArrayList<>();
         }
-        List<Film> filmList = new ArrayList<>(filmStorage.findAll());
-        filmList.sort(COMPARATOR);
         log.info("Возвращается отсортированный по популярности список");
-        return filmList.stream().limit(count).collect(Collectors.toList());
+        return filmStorage.giveMostPopularFilms(count);
     }
 
     @SneakyThrows
