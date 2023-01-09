@@ -39,23 +39,23 @@ public class UserService {
         if (friends == null || friends2 == null) {
             return new ArrayList<>();
         }
-        //friends.retainAll(friends2);
-        //return convertSetIdToListUsers(friends);
         return convertSetIdToListUsers(friends.stream().filter(friends2::contains).collect(Collectors.toSet()));
     }
 
     public void addFriend(Integer userId, Integer friendId) {
         addFriendMethod(userId, friendId);
-        addFriendMethod(friendId, userId);
     }
 
     public void deleteFriend(Integer userId, Integer friendId) {
         deleteFriendMethod(userId, friendId);
-        deleteFriendMethod(friendId, userId);
     }
 
     @SneakyThrows
     public User create(User user) {
+        if (user.getName() == null || user.getName().isBlank()) {
+            log.info("Меняем пустое имя {} на логин {}", user.getName(), user.getLogin());
+            user = user.withName(user.getLogin());
+        }
         validating(user);
         return userStorage.create(user);
     }
@@ -77,23 +77,25 @@ public class UserService {
 
     @SneakyThrows
     private void addFriendMethod(Integer id, Integer friendId) {
-        Set<Long> friends = userStorage.findById(friendId).getFriends();
+        userStorage.findById(friendId);
+        Set<Long> friends = userStorage.findById(id).getFriends();
         if (friends == null) {
             friends = new HashSet<>();
         }
-        friends.add((long) id);
-        userStorage.update(userStorage.findById(friendId).withFriends(friends));
+        friends.add((long) friendId);
+        userStorage.update(userStorage.findById(id).withFriends(friends));
     }
 
     @SneakyThrows
     private void deleteFriendMethod(Integer id, Integer friendId) {
-        Set<Long> friends = userStorage.findById(friendId).getFriends();
-        if (friends == null || !friends.contains((long) id)) {
+        userStorage.findById(friendId);
+        Set<Long> friends = userStorage.findById(id).getFriends();
+        if (friends == null || !friends.contains((long) friendId)) {
             throw new EntityNotFoundException(String.format("Не найден %s в списке друзей %s",
-                    userStorage.findById(id), userStorage.findById(friendId)));
+                    userStorage.findById(friendId), userStorage.findById(id)));
         }
-        friends.remove((long) id);
-        userStorage.update(userStorage.findById(friendId).withFriends(friends));
+        friends.remove((long) friendId);
+        userStorage.update(userStorage.findById(id).withFriends(friends));
     }
 
     private void validating(User user) throws ValidationException {

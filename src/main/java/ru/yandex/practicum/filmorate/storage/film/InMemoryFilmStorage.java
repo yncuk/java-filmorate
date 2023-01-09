@@ -6,9 +6,8 @@ import ru.yandex.practicum.filmorate.exceptions.EntityNotFoundException;
 import ru.yandex.practicum.filmorate.exceptions.ValidationException;
 import ru.yandex.practicum.filmorate.model.Film;
 
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Component
@@ -16,6 +15,8 @@ public class InMemoryFilmStorage implements FilmStorage {
 
     Map<Integer, Film> films = new HashMap<>();
     private int id = 1;
+    private final Comparator<Film> COMPARATOR = (o1, o2) ->
+            Integer.compare(o2.getRate(), o1.getRate());
 
     @Override
     public Collection<Film> findAll() {
@@ -50,5 +51,13 @@ public class InMemoryFilmStorage implements FilmStorage {
             throw new EntityNotFoundException("Такого фильма нет");
         }
         return film;
+    }
+
+    @Override
+    public List<Film> giveMostPopularFilms(Integer count) {
+        List<Film> filmList = new ArrayList<>(findAll());
+        filmList.sort(COMPARATOR);
+        log.info("Возвращается отсортированный по популярности список");
+        return filmList.stream().limit(count).collect(Collectors.toList());
     }
 }
