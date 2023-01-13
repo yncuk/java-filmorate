@@ -31,10 +31,11 @@ public class UserDbStorage implements UserStorage {
     @Override
     public User findById(Integer id) throws EntityNotFoundException {
         String requestUserById = "select * from users where user_id = ?";
-        if (jdbcTemplate.query(requestUserById, this::makeId, id).isEmpty()) {
+        List<User> user = jdbcTemplate.query(requestUserById, this::makeUser, id);
+        if (user.isEmpty()) {
             throw new EntityNotFoundException("Не найден пользователь");
         }
-        return jdbcTemplate.queryForObject(requestUserById, this::makeUser, id);
+        return user.get(0);
     }
 
     @Override
@@ -105,10 +106,6 @@ public class UserDbStorage implements UserStorage {
                 rs.getDate("birthday").toLocalDate(),
                 makeFriendForUser(rs.getInt("user_id")),
                 makeLikedFilmsForUser(rs.getInt("user_id")));
-    }
-
-    private Integer makeId(ResultSet rs, int rowNum) throws SQLException {
-        return rs.getInt("user_id");
     }
 
     private Integer makeFilmId(ResultSet rs, int rowNum) throws SQLException {

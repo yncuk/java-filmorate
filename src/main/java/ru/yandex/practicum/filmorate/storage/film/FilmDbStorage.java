@@ -32,10 +32,11 @@ public class FilmDbStorage implements FilmStorage {
     @Override
     public Film findById(Integer id) throws EntityNotFoundException {
         String requestFilmById = "select * from films where film_id = ?";
-        if (jdbcTemplate.query(requestFilmById, this::makeId, id).isEmpty()) {
+        List<Film> film = jdbcTemplate.query(requestFilmById, this::makeFilm, id);
+        if (film.isEmpty()) {
             throw new EntityNotFoundException("Не найден фильм");
         }
-        return jdbcTemplate.queryForObject(requestFilmById, this::makeFilm, id);
+        return film.get(0);
     }
 
     @Override
@@ -103,10 +104,6 @@ public class FilmDbStorage implements FilmStorage {
                 rs.getString("description"), rs.getDate("release_date").toLocalDate(),
                 rs.getInt("duration"), rs.getInt("rate"),
                 makeGenresForFilm(rs.getInt("film_id")), makeMpaForFilm(rs.getInt("film_id")));
-    }
-
-    private Integer makeId(ResultSet rs, int rowNum) throws SQLException {
-        return rs.getInt("film_id");
     }
 
     private Integer makeCategoryId(ResultSet rs, int rowNum) throws SQLException {
