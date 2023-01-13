@@ -12,7 +12,6 @@ import ru.yandex.practicum.filmorate.storage.user.UserStorage;
 
 import java.time.LocalDate;
 import java.util.*;
-import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -20,8 +19,6 @@ import java.util.stream.Collectors;
 public class FilmService {
     private final FilmStorage filmStorage;
     private final UserStorage userStorage;
-    private final Comparator<Film> COMPARATOR = (o1, o2) ->
-        Integer.compare(o2.getLikes(), o1.getLikes());
     private final LocalDate movieBirthday = LocalDate.of(1895, 12, 28);
 
     public Collection<Film> findAll() {
@@ -33,19 +30,17 @@ public class FilmService {
     }
 
     public List<Film> giveMostPopularFilm(Integer count) {
-        if (filmStorage.findAll() == null) {
-            log.info("Фильмов в списке нет, параметр = {}", filmStorage.findAll());
+        if (filmStorage.giveMostPopularFilms(count) == null) {
+            log.info("Фильмов в списке нет, параметр = {}", filmStorage.giveMostPopularFilms(count));
             return new ArrayList<>();
         }
-        List<Film> filmList = new ArrayList<>(filmStorage.findAll());
-        filmList.sort(COMPARATOR);
         log.info("Возвращается отсортированный по популярности список");
-        return filmList.stream().limit(count).collect(Collectors.toList());
+        return filmStorage.giveMostPopularFilms(count);
     }
 
     @SneakyThrows
     public void putLike(Integer id, Integer userId) {
-        Set<Long> likedFilm = userStorage.findById(userId).getLikedFilm();
+        Set<Long> likedFilm = userStorage.findById(userId).getLikedFilms();
         if (likedFilm == null) {
             log.info("Пользователь {} еще не ставил лайки на фильмы", userStorage.findById(userId));
             likedFilm = new HashSet<>();
@@ -54,25 +49,25 @@ public class FilmService {
             return;
         }
         likedFilm.add((long) id);
-        int likes = filmStorage.findById(id).getLikes();
+        int likes = filmStorage.findById(id).getRate();
         likes++;
-        filmStorage.update(filmStorage.findById(id).withLikes(likes));
-        userStorage.update(userStorage.findById(userId).withLikedFilm(likedFilm));
+        filmStorage.update(filmStorage.findById(id).withRate(likes));
+        userStorage.update(userStorage.findById(userId).withLikedFilms(likedFilm));
     }
 
     @SneakyThrows
     public void deleteLike(Integer id, Integer userId) {
-        Set<Long> likedFilm = userStorage.findById(userId).getLikedFilm();
+        Set<Long> likedFilm = userStorage.findById(userId).getLikedFilms();
         if (likedFilm == null) {
             return;
         } else if (!likedFilm.contains((long) id)) {
             throw new EntityNotFoundException("Не найден фильм в понравившихся");
         }
         likedFilm.remove((long) id);
-        int likes = filmStorage.findById(id).getLikes();
+        int likes = filmStorage.findById(id).getRate();
         likes--;
-        filmStorage.update(filmStorage.findById(id).withLikes(likes));
-        userStorage.update(userStorage.findById(userId).withLikedFilm(likedFilm));
+        filmStorage.update(filmStorage.findById(id).withRate(likes));
+        userStorage.update(userStorage.findById(userId).withLikedFilms(likedFilm));
     }
 
     public Film create(Film film) throws ValidationException {

@@ -40,13 +40,6 @@ public class InMemoryUserStorage implements UserStorage {
 
     @Override
     public User create(User user) throws ValidationException {
-        if (user.getName() == null) {
-            log.info("Меняем пустое имя {} на логин {}", user.getName(), user.getLogin());
-            user = user.withName(user.getLogin());
-        } else if (user.getName().isBlank()) {
-            log.info("Меняем пустое имя {} на логин {}", user.getName(), user.getLogin());
-            user = user.withName(user.getLogin());
-        }
         user = user.withId(id);
         id++;
         users.put(user.getId(), user);

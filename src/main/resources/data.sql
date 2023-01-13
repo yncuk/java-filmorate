@@ -1,0 +1,14 @@
+delete from films;
+AlTER TABLE FILMS ALTER COLUMN FILM_ID RESTART with 1;
+delete from users;
+AlTER TABLE users ALTER COLUMN user_ID RESTART with 1;
+delete from FRIEND;
+delete from CATEGORY;
+AlTER TABLE CATEGORY ALTER COLUMN CATEGORY_ID RESTART with 1;
+insert into CATEGORY (CATEGORY_NAME) values ('G'), ('PG'), ('PG-13'), ('R'), ('NC-17');
+delete from GENRE;
+AlTER TABLE GENRE ALTER COLUMN GENRE_ID RESTART with 1;
+insert into GENRE (GENRE_NAME) values ('Комедия'), ('Драма'), ('Мультфильм'), ('Триллер'), ('Документальный'), ('Боевик');
+delete from FILM_CATEGORY;
+delete from FILM_GENRE;
+delete from LIKED_FILM;

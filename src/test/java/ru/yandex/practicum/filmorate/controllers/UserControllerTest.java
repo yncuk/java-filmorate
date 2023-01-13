@@ -1,19 +1,24 @@
 package ru.yandex.practicum.filmorate.controllers;
 
+import lombok.RequiredArgsConstructor;
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
-import ru.yandex.practicum.filmorate.mapper.CustomMapper;
+import ru.yandex.practicum.filmorate.exceptions.EntityNotFoundException;
 import ru.yandex.practicum.filmorate.model.User;
+import ru.yandex.practicum.filmorate.service.UserService;
+import ru.yandex.practicum.filmorate.storage.user.UserDbStorage;
 
 import java.time.LocalDate;
-import java.util.List;
+import java.util.*;
 
+import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
@@ -22,13 +27,16 @@ import static ru.yandex.practicum.filmorate.mapper.CustomMapper.getMapper;
 @SpringBootTest
 @AutoConfigureMockMvc
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
+@AutoConfigureTestDatabase
+@RequiredArgsConstructor(onConstructor_ = @Autowired)
 class UserControllerTest {
 
     @Autowired
     private MockMvc mockMvc;
-
     @Autowired
     private UserController userController;
+    private final UserDbStorage userStorage;
+    private final UserService userService;
 
     @Order(1)
     @ParameterizedTest(name = "{index}. Check create user with wrong email: \"{arguments}\"")
@@ -70,16 +78,27 @@ class UserControllerTest {
     @Order(3)
     @Test
     @DisplayName("Check create user with empty name")
-    void createUserWithEmptyName() {
+    void createUserWithEmptyName() throws EntityNotFoundException {
         // when
         User user = User.builder()
                 .email("name@mail.ru")
                 .login("name")
                 .birthday(LocalDate.of(2000, 12, 20))
+                .likedFilms(new HashSet<>(List.of()))
                 .build();
-        User user1 = userController.create(user);
+        userController.create(user);
+        Optional<User> userOptional = Optional.ofNullable(userStorage.findById(1));
         // then
-        assertEquals("name", user1.getName());
+        assertThat(userOptional)
+                .isPresent()
+                .hasValueSatisfying(user2 ->
+                        assertThat(user2).hasFieldOrPropertyWithValue("id", 1)
+                                .hasFieldOrPropertyWithValue("email", "name@mail.ru")
+                                .hasFieldOrPropertyWithValue("login", "name")
+                                .hasFieldOrPropertyWithValue("name", "name")
+                                .hasFieldOrPropertyWithValue("birthday", LocalDate.of(2000, 12, 20))
+                                .hasFieldOrPropertyWithValue("likedFilms", new HashSet<>(List.of()))
+                );
     }
 
     @Order(4)
@@ -102,22 +121,28 @@ class UserControllerTest {
     @Order(5)
     @Test
     @DisplayName("Check create user without mistakes")
-    void createUserWithoutMistakes() {
+    void createUserWithoutMistakes() throws EntityNotFoundException {
         // when
         User user = User.builder()
-                .email("last_name@mail.ru")
-                .login("last_name")
+                .email("lastName@mail.ru")
+                .login("lastName")
                 .birthday(LocalDate.of(2000, 12, 20))
+                .name("lastName")
+                .likedFilms(new HashSet<>(List.of()))
                 .build();
-        User user1 = userController.create(user);
+        userController.create(user);
+        Optional<User> userOptional = Optional.ofNullable(userStorage.findById(2));
         // then
-        assertAll(
-                () -> assertEquals(3, user1.getId()),
-                () -> assertEquals("last_name@mail.ru", user1.getEmail()),
-                () -> assertEquals("last_name", user1.getLogin()),
-                () -> assertEquals(LocalDate.of(2000, 12, 20), user1.getBirthday()),
-                () -> assertEquals("last_name", user1.getName())
-        );
+        assertThat(userOptional)
+                .isPresent()
+                .hasValueSatisfying(user1 ->
+                        assertThat(user1).hasFieldOrPropertyWithValue("id", 2)
+                                .hasFieldOrPropertyWithValue("email", "lastName@mail.ru")
+                                .hasFieldOrPropertyWithValue("login", "lastName")
+                                .hasFieldOrPropertyWithValue("name", "lastName")
+                                .hasFieldOrPropertyWithValue("birthday", LocalDate.of(2000, 12, 20))
+                                .hasFieldOrPropertyWithValue("likedFilms", new HashSet<>(List.of()))
+                );
     }
 
     @Order(6)
@@ -143,22 +168,31 @@ class UserControllerTest {
     @DisplayName("Check update user")
     void updateUser() throws Exception {
         // when
-        User user = userController.findById(2).withName("name2");
-        userController.update(user);
+        User user = User.builder()
+                .id(2)
+                .email("name2@yandex.ru")
+                .login("name2")
+                .name("name2")
+                .birthday(LocalDate.of(2002, 10, 10))
+                .build();
+        userStorage.update(user);
         // then
         mockMvc.perform(put("/users")
                         .content(getMapper().writeValueAsString(user))
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().is2xxSuccessful());
 
-        User userCurrent = userController.findById(2);
-        assertAll(
-                () -> assertEquals(2, userCurrent.getId()),
-                () -> assertEquals("name@mail.ru", userCurrent.getEmail()),
-                () -> assertEquals("name", userCurrent.getLogin()),
-                () -> assertEquals(LocalDate.of(2000, 12, 20), userCurrent.getBirthday()),
-                () -> assertEquals("name2", userCurrent.getName())
-        );
+        Optional<User> userOptional = Optional.ofNullable(userStorage.findById(2));
+        // then
+        assertThat(userOptional)
+                .isPresent()
+                .hasValueSatisfying(user1 ->
+                        assertThat(user1).hasFieldOrPropertyWithValue("id", 2).
+                                hasFieldOrPropertyWithValue("email", "name2@yandex.ru").
+                                hasFieldOrPropertyWithValue("login", "name2").
+                                hasFieldOrPropertyWithValue("name", "name2").
+                                hasFieldOrPropertyWithValue("birthday", LocalDate.of(2002, 10, 10))
+                );
     }
 
     @Order(8)
@@ -169,11 +203,11 @@ class UserControllerTest {
         mockMvc.perform(get("/users/2"))
                 .andExpect(status().is2xxSuccessful())
                 .andExpect(jsonPath("$.id").value(2))
-                .andExpect(jsonPath("$.email").value("name@mail.ru"))
-                .andExpect(jsonPath("$.login").value("name"))
+                .andExpect(jsonPath("$.email").value("name2@yandex.ru"))
+                .andExpect(jsonPath("$.login").value("name2"))
                 .andExpect(jsonPath("$.name").value("name2"))
                 .andExpect(jsonPath("$.birthday")
-                        .value(LocalDate.of(2000, 12, 20).toString()));
+                        .value(LocalDate.of(2002, 10, 10).toString()));
     }
 
     @Order(9)
@@ -193,26 +227,24 @@ class UserControllerTest {
         mockMvc.perform(put("/users/1/friends/2"))
                 .andExpect(status().is2xxSuccessful());
         assertTrue(userController.findById(1).getFriends().contains(2L));
-        assertTrue(userController.findById(2).getFriends().contains(1L));
     }
 
     @Order(11)
     @Test
-    @DisplayName("User with ID = 1 add friend user with ID = 3")
-    void userId1AddFriendUserId3() throws Exception {
+    @DisplayName("User with ID = 3 add friend user with ID = 2")
+    void userId3AddFriendUserId2() throws Exception {
         // when
         User user = User.builder()
                 .email("third_name@mail.ru")
                 .login("third_name")
                 .birthday(LocalDate.of(2000, 12, 20))
+                .likedFilms(new HashSet<>(List.of()))
                 .build();
         userController.create(user);
         // then
-        mockMvc.perform(put("/users/1/friends/3"))
+        mockMvc.perform(put("/users/3/friends/2"))
                 .andExpect(status().is2xxSuccessful());
-        assertTrue(userController.findById(1).getFriends().contains(2L));
-        assertTrue(userController.findById(1).getFriends().contains(3L));
-        assertTrue(userController.findById(2).getFriends().contains(1L));
+        assertTrue(userController.findById(3).getFriends().contains(2L));
     }
 
     @Order(12)
@@ -226,13 +258,22 @@ class UserControllerTest {
 
     @Order(13)
     @Test
-    @DisplayName("Check common friend 2 and 3 user id")
-    void checkCommonFriendUser2AndUser3() throws Exception {
+    @DisplayName("Check common friend 1 and 3 user id")
+    void checkCommonFriendUser1AndUser3() throws Exception {
+        // when
+        Optional<User> userOptional = Optional.ofNullable(userService.giveMutualFriends(1, 3).get(0));
         // then
-        mockMvc.perform(get("/users/2/friends/common/3"))
-                .andExpect(status().is2xxSuccessful())
-                .andExpect(content().json(CustomMapper.getMapper()
-                        .writeValueAsString(List.of(userController.findById(1)))));
+        mockMvc.perform(get("/users/1/friends/common/3"))
+                .andExpect(status().is2xxSuccessful());
+        assertThat(userOptional)
+                .isPresent()
+                .hasValueSatisfying(user1 ->
+                        assertThat(user1).hasFieldOrPropertyWithValue("id", 2).
+                                hasFieldOrPropertyWithValue("email", "name2@yandex.ru").
+                                hasFieldOrPropertyWithValue("login", "name2").
+                                hasFieldOrPropertyWithValue("name", "name2").
+                                hasFieldOrPropertyWithValue("birthday", LocalDate.of(2002, 10, 10))
+                );
     }
 
     @Order(14)
@@ -243,17 +284,25 @@ class UserControllerTest {
         mockMvc.perform(delete("/users/1/friends/2"))
                 .andExpect(status().is2xxSuccessful());
         assertFalse(userController.findById(1).getFriends().contains(2L));
-        assertFalse(userController.findById(2).getFriends().contains(1L));
     }
 
     @Order(15)
     @Test
-    @DisplayName("Find all friend user ID = 1")
-    void findAllFriendUser1() throws Exception {
+    @DisplayName("Find all friend user ID = 3")
+    void findAllFriendUser3() throws Exception {
+        // when
+        Optional<User> userOptional = Optional.ofNullable(userStorage.giveFriends(3).get(0));
         // then
-        mockMvc.perform(get("/users/1/friends"))
-                .andExpect(status().is2xxSuccessful())
-                .andExpect(content().json(CustomMapper.getMapper()
-                        .writeValueAsString(List.of(userController.findById(3)))));
+        mockMvc.perform(get("/users/3/friends"))
+                .andExpect(status().is2xxSuccessful());
+        assertThat(userOptional)
+                .isPresent()
+                .hasValueSatisfying(user1 ->
+                        assertThat(user1).hasFieldOrPropertyWithValue("id", 2).
+                                hasFieldOrPropertyWithValue("email", "name2@yandex.ru").
+                                hasFieldOrPropertyWithValue("login", "name2").
+                                hasFieldOrPropertyWithValue("name", "name2").
+                                hasFieldOrPropertyWithValue("birthday", LocalDate.of(2002, 10, 10))
+                );
     }
 }
